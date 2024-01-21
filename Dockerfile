@@ -1,5 +1,5 @@
 ## Set our base image ##
-FROM node:18-bookworm
+FROM node:20-bookworm
 
 # Updates and Installs latest Chromium package.
 RUN apt-get update && apt-get upgrade -y && \
