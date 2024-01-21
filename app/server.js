@@ -43,7 +43,7 @@ var browser;
 
 app.all("/", async (req, res) => {
     var options = {
-        url: req.body.url || "http://localhost:3050",
+        url: req.body.url || "http://localhost:8080/status",
         pageFunction: eval(`(${req.body.pageFunction})`),
         delay: req.body.delay,
         noCookies: req.body.noCookies,
