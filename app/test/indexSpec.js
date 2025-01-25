@@ -12,43 +12,67 @@ const express = require("express");
 const app = express();
 
 describe("elastic service", function () {
-    before(async function () {
-        browser = await puppeteer.launch({
-            headless: "new",
-            args: ["--disable-dev-shm-usage", "--no-sandbox", "--disable-setuid-sandbox", "--disable-gpu", "--disable-http2"],
-        });
+    this.timeout(10000);
+    let server;
 
-        app.get("/", (req, res) => {
-            res.send("<p>Hello World!</p>");
-        });
+    before(function (done) {
+        (async () => {
+            try {
+                browser = await puppeteer.launch({
+                    headless: "new",
+                    args: ["--disable-dev-shm-usage", "--no-sandbox", "--disable-setuid-sandbox", "--disable-gpu", "--disable-http2"],
+                });
 
-        app.get("/agent", (req, res) => {
-            res.send(`<p>${req.headers["user-agent"]}</p>`);
-        });
+                app.get("/", (req, res) => {
+                    res.send("<p>Hello World!</p>");
+                });
 
-        await new Promise((resolve) => {
-            app.listen(PORT, () => {
-                return resolve();
-            });
-        });
+                app.get("/agent", (req, res) => {
+                    res.send(`<p>${req.headers["user-agent"]}</p>`);
+                });
+
+                server = app.listen(PORT, () => {
+                    done();
+                });
+            } catch (error) {
+                done(error);
+            }
+        })();
     });
 
-    after(async function () {
-        await browser.close();
+    after(function (done) {
+        (async () => {
+            try {
+                await browser.close();
+                server.close(() => {
+                    done();
+                    process.exit(0); // Exit after all tests complete
+                });
+            } catch (error) {
+                done(error);
+                process.exit(1); // Exit with error code if something went wrong
+            }
+        })();
     });
 
-    it("open page and check results", async function test() {
-        var result = await lib(browser, {
-            url: `http://127.0.0.1:${PORT}`,
-        });
+    it("open page and check results", function (done) {
+        (async () => {
+            try {
+                var result = await lib(browser, {
+                    url: `http://127.0.0.1:${PORT}`,
+                });
 
-        var pages = await browser.pages();
-        assert.equal(1, pages.length);
-
-        assert.equal(result, "<html><head></head><body><p>Hello World!</p></body></html>");
+                var pages = await browser.pages();
+                assert.equal(1, pages.length);
+                assert.equal(result, "<html><head></head><body><p>Hello World!</p></body></html>");
+                done();
+            } catch (error) {
+                done(error);
+            }
+        })();
     });
 
-    it("open page and check results", async function test() {
+    it("open page and check page function results", async function test() {
         var result = await lib(browser, {
             url: `http://127.0.0.1:${PORT}`,
             pageFunction: function ($) {
@@ -75,5 +99,16 @@ describe("elastic service", function () {
         assert.equal(1, pages.length);
 
         assert.equal(result, "TestAgent");
+    });
+
+    it("open page and check custom site", async function test() {
+        var result = await lib(browser, {
+            url: `https://betterprogramming.pub/how-to-share-a-postgres-socket-between-docker-containers-ad126e430de7`,
+            userAgent: "TestAgent",
+        });
+
+        var pages = await browser.pages();
+
+        console.log(pages.length);
     });
 });

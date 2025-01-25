@@ -42,18 +42,23 @@ var browser;
 })();
 
 app.all("/", async (req, res) => {
-    var options = {
-        url: req.body.url || "http://localhost:8080/status",
-        pageFunction: eval(`(${req.body.pageFunction})`),
-        delay: req.body.delay,
-        noCookies: req.body.noCookies,
-        userAgent: req.body.userAgent,
-    };
+    try {
+        var options = {
+            url: req.body.url || "http://localhost:8080/status",
+            pageFunction: req.body.pageFunction ? eval(`(${req.body.pageFunction})`) : null,
+            delay: req.body.delay,
+            noCookies: req.body.noCookies,
+            userAgent: req.body.userAgent,
+        };
 
-    console.log(options);
+        console.log(options);
 
-    var result = await lib(browser, options);
-    res.json(result);
+        var result = await lib(browser, options);
+        res.json(result);
+    } catch (error) {
+        console.error("Error processing request:", error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 app.get("/status", async (req, res) => {
