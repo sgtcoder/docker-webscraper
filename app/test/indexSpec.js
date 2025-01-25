@@ -109,6 +109,17 @@ describe("elastic service", function () {
 
         var pages = await browser.pages();
 
-        console.log(pages.length);
+        assert.equal(1, pages.length);
+    });
+
+    it("open page and test costco", async function test() {
+        var result = await lib(browser, {
+            url: `https://www.costco.com/warehouse-locations/thomas-road-az-465.html`,
+            userAgent: "TestAgent",
+        });
+
+        var pages = await browser.pages();
+
+        assert.equal(1, pages.length);
     });
 });
