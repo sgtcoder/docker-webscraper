@@ -22,6 +22,7 @@ module.exports = async function (browser, options) {
     const page = await browser.newPage();
 
     await page.setViewport({ width: 1280, height: 720 });
+    await page.setDefaultNavigationTimeout(60000);
 
     options = options || {};
 
@@ -45,7 +46,7 @@ module.exports = async function (browser, options) {
 
     console.log("Going to page: " + options.url);
 
-    await page.goto(options.url);
+    await page.goto(options.url, { timeout: 60000 });
     //await page.screenshot({path: './example.png'});
 
     var html = await page.content();
