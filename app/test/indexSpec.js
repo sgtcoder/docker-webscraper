@@ -14,7 +14,8 @@ const app = express();
 describe("elastic service", function () {
     before(async function () {
         browser = await puppeteer.launch({
-            headless: false,
+            headless: "new",
+            args: ["--disable-dev-shm-usage", "--no-sandbox", "--disable-setuid-sandbox", "--disable-gpu", "--disable-http2"],
         });
 
         app.get("/", (req, res) => {

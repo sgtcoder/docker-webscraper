@@ -17,7 +17,7 @@ var browser;
 (async () => {
     var executablePath = process.env.EXECUTABLE_PATH || "/usr/bin/chromium";
 
-    var args = ["--disable-dev-shm-usage", "--no-sandbox", "--disable-setuid-sandbox"];
+    var args = ["--disable-dev-shm-usage", "--no-sandbox", "--disable-setuid-sandbox", "--disable-gpu", "--disable-http2"];
 
     if (process.env.PROXY_URL) {
         const newProxyUrl = await proxyChain.anonymizeProxy(process.env.PROXY_URL);
