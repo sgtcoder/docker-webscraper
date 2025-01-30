@@ -16,6 +16,7 @@ var browser;
 
 (async () => {
     var executablePath = process.env.EXECUTABLE_PATH; //|| "/usr/bin/chromium";
+    var headless = process.env.HEADLESS || "new";
 
     var args = ["--disable-dev-shm-usage", "--no-sandbox", "--disable-setuid-sandbox", "--disable-gpu", "--disable-http2"];
 
@@ -25,7 +26,7 @@ var browser;
     }
 
     var options = {
-        headless: "new",
+        headless: headless,
         executablePath: executablePath,
         args: args,
     };
