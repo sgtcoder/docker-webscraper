@@ -15,7 +15,7 @@ app.use(
 var browser;
 
 (async () => {
-    var executablePath = process.env.EXECUTABLE_PATH || "/usr/bin/chromium";
+    var executablePath = process.env.EXECUTABLE_PATH; //|| "/usr/bin/chromium";
 
     var args = ["--disable-dev-shm-usage", "--no-sandbox", "--disable-setuid-sandbox", "--disable-gpu", "--disable-http2"];
 
@@ -49,6 +49,8 @@ app.all("/", async (req, res) => {
             delay: req.body.delay,
             noCookies: req.body.noCookies,
             userAgent: req.body.userAgent,
+            headers: req.body.headers,
+            cookies: req.body.cookies,
         };
 
         console.log(options);

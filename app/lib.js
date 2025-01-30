@@ -14,15 +14,15 @@ const defaultCheerioOptions = {
  * proxy | no proxy
  * cookies (should be parsed properly)
  * userAgent
- * viewport | 1280 x 720 | etc
+ * viewport | 1920 x 1080 | etc
  * screenshot path | or false
  * there should be lock function which forbid async working (or queue)
  */
 module.exports = async function (browser, options) {
     const page = await browser.newPage();
 
-    await page.setViewport({ width: 1280, height: 720 });
-    await page.setDefaultNavigationTimeout(60000);
+    await page.setViewport({ width: 1920, height: 1080 });
+    await page.setDefaultNavigationTimeout(0);
 
     options = options || {};
 
@@ -39,14 +39,16 @@ module.exports = async function (browser, options) {
     }
 
     if (options.cookies) {
-        await Promise.all(options.cookies).map(async (cookie) => {
-            await page.setCookie(cookie);
-        });
+        await Promise.all((Array.isArray(options.cookies) ? options.cookies : [options.cookies]).map(async (cookie) => await page.setCookie(cookie)));
+    }
+
+    if (options.headers) {
+        await Promise.all((Array.isArray(options.headers) ? options.headers : [options.headers]).map(async (header) => await page.setExtraHTTPHeaders(header)));
     }
 
     console.log("Going to page: " + options.url);
 
-    await page.goto(options.url, { timeout: 60000 });
+    await page.goto(options.url, { timeout: 0 });
     //await page.screenshot({path: './example.png'});
 
     var html = await page.content();
