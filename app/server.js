@@ -15,28 +15,18 @@ app.use(
     })
 );
 
-// Conditionally add cookie and session middleware
-if (process.env.NODE_ENV === "test") {
-    app.use(cookieParser());
-    app.use(
-        session({
-            secret: "keyboard cat",
-            resave: false,
-            saveUninitialized: false,
-            cookie: {
-                maxAge: 60000,
-            },
-        })
-    );
-} else {
-    app.use(cookieParser());
-    app.use(
-        session({
-            resave: false,
-            saveUninitialized: false,
-        })
-    );
-}
+// Cookie and session middleware
+app.use(cookieParser());
+app.use(
+    session({
+        secret: "keyboard cat",
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            maxAge: 60000,
+        },
+    })
+);
 
 let browser;
 const browserReadyEmitter = new EventEmitter();
@@ -89,10 +79,17 @@ app.all("/", async (req, res) => {
             cookies: req.body.cookies,
         };
 
-        console.log(options);
+        if (process.env.NODE_ENV != "test") {
+            console.log(options);
+        }
 
         var result = await lib(browser, options);
-        res.json(result);
+
+        if (result == null) {
+            res.status(422).json({ data: "" });
+        } else {
+            res.json({ data: result });
+        }
     } catch (error) {
         console.error("Error processing request:", error);
         res.status(500).json({ error: error.message });
