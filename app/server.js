@@ -15,18 +15,28 @@ app.use(
     })
 );
 
-// Add cookie and session middleware for testing
-app.use(cookieParser());
-app.use(
-    session({
-        secret: "keyboard cat",
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            maxAge: 60000,
-        },
-    })
-);
+// Conditionally add cookie and session middleware
+if (process.env.NODE_ENV === "test") {
+    app.use(cookieParser());
+    app.use(
+        session({
+            secret: "keyboard cat",
+            resave: false,
+            saveUninitialized: false,
+            cookie: {
+                maxAge: 60000,
+            },
+        })
+    );
+} else {
+    app.use(cookieParser());
+    app.use(
+        session({
+            resave: false,
+            saveUninitialized: false,
+        })
+    );
+}
 
 let browser;
 const browserReadyEmitter = new EventEmitter();
