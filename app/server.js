@@ -6,6 +6,7 @@ const proxyChain = require("proxy-chain");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
+const EventEmitter = require("events");
 
 app.use(bodyParser.json());
 app.use(
@@ -27,7 +28,8 @@ app.use(
     })
 );
 
-var browser;
+let browser;
+const browserReadyEmitter = new EventEmitter();
 
 (async () => {
     var executablePath = process.env.EXECUTABLE_PATH || "/usr/bin/chromium";
@@ -55,7 +57,15 @@ var browser;
     browser = await puppeteer.launch(options);
 
     console.log("Browser loaded");
+    browserReadyEmitter.emit("ready");
 })();
+
+app.use((req, res, next) => {
+    if (!browser) {
+        return res.status(503).send("Service Unavailable: Browser not ready");
+    }
+    next();
+});
 
 app.all("/", async (req, res) => {
     try {
@@ -96,4 +106,4 @@ app.get("/cookies", (req, res) => {
     res.send(`<p>${req.cookies["connect.sid"]}</p>`);
 });
 
-module.exports = app;
+module.exports = { app, browserReadyEmitter };
