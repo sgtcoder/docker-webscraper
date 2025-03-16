@@ -26,7 +26,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 RUN npm install
 
 # Install Browsers
-RUN npx puppeteer browsers install chrome
+#RUN npx puppeteer browsers install chrome
 
 # Expose Ports
 ENV PORT=8080
