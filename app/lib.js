@@ -48,7 +48,7 @@ module.exports = async function (browser, options) {
 
     console.log("Going to page: " + options.url);
 
-    await page.goto(options.url, { timeout: 0 });
+    await page.goto(options.url, { timeout: 120 * 1000 });
     //await page.screenshot({path: './example.png'});
 
     var html = await page.content();
