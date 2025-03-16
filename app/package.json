@@ -5,7 +5,7 @@
     "main": "index.js",
     "scripts": {
         "start": "node index.js",
-        "test": "NODE_ENV=test mocha test/indexSpec.js"
+        "test": "NODE_ENV=test mocha test/indexTest.js"
     },
     "repository": {
         "type": "git",

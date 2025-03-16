@@ -21,7 +21,7 @@ app.use(
     })
 );
 
-const server = require("./../server");
+const server = require("../server");
 const PORT = 3050;
 const PORT2 = 3051;
 const request = require("superagent");

@@ -3,7 +3,7 @@
 var assert = require("assert");
 var page;
 const puppeteer = require("puppeteer");
-const lib = require("./../lib");
+const lib = require("../lib");
 const Promise = require("bluebird");
 const PORT = 3050;
 var browser;
