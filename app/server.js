@@ -4,6 +4,8 @@ const lib = require("./lib");
 const puppeteer = require("puppeteer");
 const proxyChain = require("proxy-chain");
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
+const session = require("express-session");
 
 app.use(bodyParser.json());
 app.use(
@@ -12,10 +14,23 @@ app.use(
     })
 );
 
+// Add cookie and session middleware for testing
+app.use(cookieParser());
+app.use(
+    session({
+        secret: "keyboard cat",
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            maxAge: 60000,
+        },
+    })
+);
+
 var browser;
 
 (async () => {
-    var executablePath = process.env.EXECUTABLE_PATH; //|| "/usr/bin/chromium";
+    var executablePath = process.env.EXECUTABLE_PATH || "/usr/bin/chromium";
     var headless = process.env.HEADLESS || "new";
 
     var args = ["--disable-dev-shm-usage", "--no-sandbox", "--disable-setuid-sandbox", "--disable-gpu", "--disable-http2"];
@@ -66,6 +81,19 @@ app.all("/", async (req, res) => {
 
 app.get("/status", async (req, res) => {
     res.json({});
+});
+
+// Add test routes
+app.get("/test", (req, res) => {
+    res.send("<p>Hello World!</p>");
+});
+
+app.get("/agent", (req, res) => {
+    res.send(`<p>${req.headers["user-agent"]}</p>`);
+});
+
+app.get("/cookies", (req, res) => {
+    res.send(`<p>${req.cookies["connect.sid"]}</p>`);
 });
 
 module.exports = app;

@@ -1,19 +1,17 @@
 "use strict";
 
 var assert = require("assert");
-var page;
 const puppeteer = require("puppeteer");
 const lib = require("../lib");
-const Promise = require("bluebird");
 const PORT = 3050;
 var browser;
 
-const express = require("express");
-const app = express();
+const server = require("../server"); // Use the combined server
+let app = server;
 
 describe("elastic service", function () {
     this.timeout(10000);
-    let server;
+    let serverInstance;
 
     before(function (done) {
         (async () => {
@@ -23,15 +21,7 @@ describe("elastic service", function () {
                     args: ["--disable-dev-shm-usage", "--no-sandbox", "--disable-setuid-sandbox", "--disable-gpu", "--disable-http2"],
                 });
 
-                app.get("/", (req, res) => {
-                    res.send("<p>Hello World!</p>");
-                });
-
-                app.get("/agent", (req, res) => {
-                    res.send(`<p>${req.headers["user-agent"]}</p>`);
-                });
-
-                server = app.listen(PORT, () => {
+                serverInstance = app.listen(PORT, () => {
                     done();
                 });
             } catch (error) {
@@ -44,7 +34,7 @@ describe("elastic service", function () {
         (async () => {
             try {
                 await browser.close();
-                server.close(() => {
+                serverInstance.close(() => {
                     done();
                     process.exit(0); // Exit after all tests complete
                 });
@@ -59,7 +49,7 @@ describe("elastic service", function () {
         (async () => {
             try {
                 var result = await lib(browser, {
-                    url: `http://127.0.0.1:${PORT}`,
+                    url: `http://127.0.0.1:${PORT}/test`,
                 });
 
                 var pages = await browser.pages();
@@ -74,7 +64,7 @@ describe("elastic service", function () {
 
     it("open page and check page function results", async function test() {
         var result = await lib(browser, {
-            url: `http://127.0.0.1:${PORT}`,
+            url: `http://127.0.0.1:${PORT}/test`,
             pageFunction: function ($) {
                 return $("p").text();
             },
