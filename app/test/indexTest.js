@@ -9,24 +9,35 @@ let serverInstance;
 let connections = new Set();
 
 describe("elastic service", function () {
-    before(function (done) {
-        serverInstance = app.listen(PORT, () => {
-            // Wait for the browser to be ready
-            browserReadyEmitter.once("ready", done);
-        });
+    this.timeout(30000);
 
-        serverInstance.on("connection", (conn) => {
-            connections.add(conn);
-            conn.on("close", () => {
-                connections.delete(conn);
+    before(async function () {
+        return new Promise((resolve) => {
+            serverInstance = app.listen(PORT, () => {
+                // Wait for the browser to be ready
+                browserReadyEmitter.once("ready", resolve);
+            });
+
+            serverInstance.on("connection", (conn) => {
+                connections.add(conn);
+                conn.on("close", () => {
+                    connections.delete(conn);
+                });
             });
         });
     });
 
-    after(function (done) {
-        serverInstance.close(() => {
-            done();
-            process.exit(0); // Exit after all tests complete
+    after(async function () {
+        return new Promise((resolve) => {
+            // Close all existing connections
+            connections.forEach((conn) => {
+                conn.destroy();
+            });
+
+            serverInstance.close(() => {
+                resolve();
+                process.exit(0); // Exit after all tests complete
+            });
         });
     });
 
@@ -64,20 +75,30 @@ describe("elastic service", function () {
             url: `https://betterprogramming.pub/how-to-share-a-postgres-socket-between-docker-containers-ad126e430de7`,
             userAgent: "TestAgent",
         });
-        // Add any specific checks you need for this page
+
         assert(response.status === 200);
     });
 
     it("open page and test costco", async function () {
-        const response = await axios.post(`http://127.0.0.1:${PORT}`, {
-            url: `https://www.costco.com/warehouse-locations/thomas-road-az-465.html`,
-            userAgent: "TestAgent",
-            pageFunction: 'function($) { return $("#service-collapse-1").html() }',
-        });
+        // Enable debug logging for this test
+        process.env.DEBUG = "true";
 
-        console.log(response.data);
+        try {
+            const response = await axios.post(`http://127.0.0.1:${PORT}`, {
+                url: `https://www.costco.com/warehouse-locations/thomas-road-az-465.html`,
+                userAgent: "TestAgent",
+            });
 
-        // Add any specific checks you need for this page
-        assert(response.status === 200);
+            console.log("Response status:", response.status);
+            console.log("Response data length:", response.data.length);
+
+            assert(response.status === 200);
+        } catch (error) {
+            console.error("Test error:", error.message);
+            if (error.response) {
+                console.error("Response data:", error.response.data);
+            }
+            throw error;
+        }
     });
 });

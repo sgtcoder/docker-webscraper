@@ -7,6 +7,7 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const EventEmitter = require("events");
+const captchaHandler = require("./captcha-handler");
 
 app.use(bodyParser.json());
 app.use(
@@ -30,6 +31,8 @@ app.use(
 
 let browser;
 const browserReadyEmitter = new EventEmitter();
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 (async () => {
     var executablePath = process.env.EXECUTABLE_PATH || "/usr/bin/chromium";
@@ -83,12 +86,41 @@ app.all("/", async (req, res) => {
             console.log(options);
         }
 
-        var result = await lib(browser, options);
+        // Create a new page for this request
+        const page = await browser.newPage();
+        try {
+            // Set up basic page configuration
+            if (options.userAgent) {
+                await page.setUserAgent(options.userAgent);
+            }
+            if (options.headers) {
+                await page.setExtraHTTPHeaders(options.headers);
+            }
 
-        if (result == null) {
-            res.status(422).json({ data: "" });
-        } else {
-            res.json({ data: result });
+            // Navigate to the URL
+            await page.goto(options.url, { waitUntil: "networkidle0" });
+
+            // Check for CAPTCHA
+            const hasCaptcha = await captchaHandler.checkForCaptcha(page);
+            if (hasCaptcha) {
+                console.log("CAPTCHA detected, attempting to solve...");
+                await captchaHandler.solveCaptcha(page, options.url);
+
+                // Wait for page to stabilize after CAPTCHA
+                await delay(2000);
+            }
+
+            // Process the page as normal
+            var result = await lib(browser, options);
+
+            if (result == null) {
+                res.status(422).json({ data: "" });
+            } else {
+                res.json({ data: result });
+            }
+        } finally {
+            // Always close the page
+            await page.close();
         }
     } catch (error) {
         console.error("Error processing request:", error);
