@@ -44,14 +44,11 @@ async function scrapePage(browser, options, config) {
     try {
         page = await browser.newPage();
 
-        // Add additional page configurations
+        // Basic headers that don't depend on user agent
         await page.setExtraHTTPHeaders({
             "Accept-Language": "en-US,en;q=0.9",
             Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
             "Accept-Encoding": "gzip, deflate, br",
-            "Sec-Ch-Ua": '"Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"',
-            "Sec-Ch-Ua-Mobile": "?0",
-            "Sec-Ch-Ua-Platform": '"Windows"',
             "Upgrade-Insecure-Requests": "1",
         });
 
@@ -92,6 +89,51 @@ async function scrapePage(browser, options, config) {
 
         userAgent = options.userAgent || new UserAgent().toString();
         await page.setUserAgent(userAgent);
+
+        // Add user agent specific headers
+        if (userAgent.includes("Chrome") || userAgent.includes("Edg/")) {
+            const chromeVersion = userAgent.match(/Chrome\/(\d+)/)?.[1] || "134";
+            const platform = userAgent.includes("Windows") ? "Windows" : userAgent.includes("Macintosh") ? "macOS" : "Linux";
+
+            const headers = {
+                "Sec-Ch-Ua": `"Chromium";v="${chromeVersion}", "Not A(Brand";v="99"`,
+                "Sec-Ch-Ua-Mobile": "?0",
+                "Sec-Ch-Ua-Platform": `"${platform}"`,
+            };
+
+            if (userAgent.includes("Edg/")) {
+                const edgeVersion = userAgent.match(/Edg\/(\d+)/)?.[1] || "134";
+                headers["Sec-Ch-Ua"] = `"Chromium";v="${chromeVersion}", "Microsoft Edge";v="${edgeVersion}", "Not A(Brand";v="99"`;
+            }
+
+            await page.setExtraHTTPHeaders(headers);
+        } else if (userAgent.includes("Firefox")) {
+            // Firefox specific headers
+            const platform = userAgent.includes("Windows") ? "Windows" : userAgent.includes("Macintosh") ? "macOS" : userAgent.includes("Ubuntu") ? "Ubuntu" : "Linux";
+
+            await page.setExtraHTTPHeaders({
+                Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.5",
+                DNT: "1",
+                "Upgrade-Insecure-Requests": "1",
+                "Sec-Fetch-Dest": "document",
+                "Sec-Fetch-Mode": "navigate",
+                "Sec-Fetch-Site": "none",
+                "Sec-Fetch-User": "?1",
+            });
+        } else if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) {
+            // Safari specific headers (when it's actual Safari, not Chrome)
+            const safariVersion = userAgent.match(/Version\/(\d+\.\d+)/)?.[1] || "18.3";
+
+            await page.setExtraHTTPHeaders({
+                Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Sec-Fetch-Site": "none",
+                "Sec-Fetch-Mode": "navigate",
+                "Sec-Fetch-Dest": "document",
+                "Sec-Fetch-User": "?1",
+            });
+        }
 
         if (options.cookies) {
             await Promise.all((Array.isArray(options.cookies) ? options.cookies : [options.cookies]).map(async (cookie) => await page.setCookie(cookie)));
