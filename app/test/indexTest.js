@@ -2,37 +2,40 @@
 
 var assert = require("assert");
 const axios = require("axios");
-const PORT = 3000;
+const { app, browserReadyEmitter, config } = require("../server");
 
-const { app, browserReadyEmitter } = require("../server"); // Use the combined server
 let serverInstance;
 let connections = new Set();
 
 describe("elastic service", function () {
+    // Increase timeout for all tests
+    this.timeout(config.test.timeout);
+
     before(function (done) {
-        serverInstance = app.listen(PORT, () => {
-            // Wait for the browser to be ready
-            browserReadyEmitter.once("ready", done);
+        serverInstance = app.listen(config.server.port, () => {
+            browserReadyEmitter.once("ready", () => done());
         });
 
         serverInstance.on("connection", (conn) => {
             connections.add(conn);
-            conn.on("close", () => {
-                connections.delete(conn);
-            });
+            conn.on("close", () => connections.delete(conn));
         });
     });
 
     after(function (done) {
+        // Close all existing connections
+        connections.forEach((conn) => conn.destroy());
+
+        // Close server and cleanup
         serverInstance.close(() => {
+            connections.clear();
             done();
-            process.exit(0); // Exit after all tests complete
         });
     });
 
     it("open page and check results", async function () {
-        const response = await axios.post(`http://127.0.0.1:${PORT}`, {
-            url: `http://127.0.0.1:${PORT}/test`,
+        const response = await axios.post(`http://127.0.0.1:${config.server.port}`, {
+            url: `http://127.0.0.1:${config.server.port}/test`,
             userAgent: "TestAgent",
         });
 
@@ -40,8 +43,8 @@ describe("elastic service", function () {
     });
 
     it("open page and check page function results", async function () {
-        const response = await axios.post(`http://127.0.0.1:${PORT}`, {
-            url: `http://127.0.0.1:${PORT}/test`,
+        const response = await axios.post(`http://127.0.0.1:${config.server.port}`, {
+            url: `http://127.0.0.1:${config.server.port}/test`,
             userAgent: "TestAgent",
             pageFunction: 'function($) { return $("p").text() }',
         });
@@ -50,8 +53,8 @@ describe("elastic service", function () {
     });
 
     it("open page and check user agent", async function () {
-        const response = await axios.post(`http://127.0.0.1:${PORT}`, {
-            url: `http://127.0.0.1:${PORT}/agent`,
+        const response = await axios.post(`http://127.0.0.1:${config.server.port}`, {
+            url: `http://127.0.0.1:${config.server.port}/agent`,
             userAgent: "TestAgent",
             pageFunction: 'function($) { return $("p").text() }',
         });
@@ -60,24 +63,22 @@ describe("elastic service", function () {
     });
 
     it("open page and check custom site", async function () {
-        const response = await axios.post(`http://127.0.0.1:${PORT}`, {
+        const response = await axios.post(`http://127.0.0.1:${config.server.port}`, {
             url: `https://betterprogramming.pub/how-to-share-a-postgres-socket-between-docker-containers-ad126e430de7`,
             userAgent: "TestAgent",
         });
-        // Add any specific checks you need for this page
+
         assert(response.status === 200);
+        assert(response.data.targetStatus === 200, `Expected target status 200 but got ${response.data.targetStatus}`);
     });
 
     it("open page and test costco", async function () {
-        const response = await axios.post(`http://127.0.0.1:${PORT}`, {
+        const response = await axios.post(`http://127.0.0.1:${config.server.port}`, {
             url: `https://www.costco.com/warehouse-locations/thomas-road-az-465.html`,
-            userAgent: "TestAgent",
             pageFunction: 'function($) { return $("#service-collapse-1").html() }',
+            viewport: config.browser.defaultViewport,
         });
 
-        console.log(response.data);
-
-        // Add any specific checks you need for this page
-        assert(response.status === 200);
+        assert(response.status === 200, `Expected status 200 but got ${response.status}`);
     });
 });
