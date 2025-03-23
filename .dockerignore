@@ -1,7 +1,8 @@
 .git
-.gitignore
-.github
 .gitattributes
-READMETEMPLATE.md
+.github
+.gitignore
 README.md
+READMETEMPLATE.md
 node_modules
+package-lock.json
