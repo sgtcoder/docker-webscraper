@@ -40,6 +40,7 @@ const browserReadyEmitter = new EventEmitter();
 // Scraping function
 async function scrapePage(browser, options, config) {
     let page;
+    let userAgent;
     try {
         page = await browser.newPage();
 
@@ -85,10 +86,11 @@ async function scrapePage(browser, options, config) {
             return {
                 error: new Error("Please provide url"),
                 status: 400,
+                userAgent: null,
             };
         }
 
-        const userAgent = options.userAgent || new UserAgent().toString();
+        userAgent = options.userAgent || new UserAgent().toString();
         await page.setUserAgent(userAgent);
 
         if (options.cookies) {
@@ -110,6 +112,7 @@ async function scrapePage(browser, options, config) {
             return {
                 error: new Error(`Page returned status code: ${status}`),
                 status: status,
+                userAgent: userAgent,
             };
         }
 
@@ -122,6 +125,7 @@ async function scrapePage(browser, options, config) {
             return {
                 data: result || null,
                 status: status,
+                userAgent: userAgent,
             };
         }
 
@@ -129,13 +133,17 @@ async function scrapePage(browser, options, config) {
         return {
             data: html || null,
             status: status,
+            userAgent: userAgent,
         };
     } catch (error) {
-        console.error("Final error:", error.message);
+        if (!config.server.quiet) {
+            console.error("Error:", error.message);
+        }
         if (page) await page.close();
         return {
             error: error,
             status: 500,
+            userAgent: userAgent || null,
         };
     }
 }
@@ -162,33 +170,41 @@ app.all("/", async (req, res) => {
             cookies: req.body.cookies,
         };
 
+        if (!config.server.quiet) {
+            console.log("Request Options:", {
+                ...options,
+                pageFunction: options.pageFunction ? options.pageFunction.toString() : null,
+            });
+        }
+
         const result = await scrapePage(browser, options, config);
 
-        // If there was an error
         if (result.error) {
             return res.status(result.status || 500).json({
                 error: result.error.message,
                 targetStatus: result.status,
+                userAgent: result.userAgent,
             });
         }
 
-        // Return 206 for empty results
         if (result.data == null || result.data === "") {
             return res.status(206).json({
                 data: null,
                 targetStatus: result.status,
+                userAgent: result.userAgent,
             });
         }
 
-        // Return 200 for successful results with data
         res.status(200).json({
             data: result.data,
             targetStatus: result.status,
+            userAgent: result.userAgent,
         });
     } catch (error) {
         res.status(500).json({
             error: error.message,
             targetStatus: null,
+            userAgent: null,
         });
     }
 });

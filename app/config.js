@@ -11,6 +11,7 @@ module.exports = {
                 maxAge: 60000,
             },
         },
+        quiet: process.env.NODE_ENV === "test", // Suppress logs in test mode
     },
     browser: {
         executablePath: process.env.EXECUTABLE_PATH || "/usr/bin/chromium",
