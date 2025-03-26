@@ -17,12 +17,13 @@
         "url": "https://github.com/digestoo/web-to-json/issues"
     },
     "homepage": "https://github.com/digestoo/web-to-json#readme",
+    "overrides": {
+        "rimraf": "^6.0.1",
+        "glob": "^11.0.1"
+    },
     "devDependencies": {
-        "assert": "^2.1",
-        "cookie-parser": "^1.4.7",
-        "express-session": "^1.18.1",
+        "assert": "^2.1.0",
         "mocha": "^11.1.0",
-        "server": "^1.0.41",
         "superagent": "^10.2.0"
     },
     "dependencies": {
@@ -30,13 +31,16 @@
         "bluebird": "^3.7.2",
         "body-parser": "^1.20.3",
         "cheerio": "^1.0.0",
+        "cookie-parser": "^1.4.7",
         "dotenv": "^16.4.7",
         "express": "^4.21.2",
+        "express-session": "^1.18.1",
         "lodash": "^4.17.21",
         "proxy-chain": "^2.5.7",
-        "puppeteer": "^24.4.0",
+        "puppeteer-core": "^24.4.0",
         "puppeteer-extra": "^3.3.6",
         "puppeteer-extra-plugin-stealth": "^2.11.2",
+        "rimraf": "^6.0.1",
         "user-agents": "^1.1.490"
     }
 }
