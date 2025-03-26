@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const puppeteer = require("puppeteer-extra");
+const puppeteerCore = require("puppeteer-core");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 const proxyChain = require("proxy-chain");
 const bodyParser = require("body-parser");
@@ -12,8 +13,9 @@ const cheerio = require("cheerio");
 const Promise = require("bluebird");
 const UserAgent = require("user-agents");
 
-// Add stealth plugin
+// Configure puppeteer-extra with puppeteer-core
 puppeteer.use(StealthPlugin());
+puppeteer.createBrowserFetcher = puppeteerCore.createBrowserFetcher;
 
 // Express middleware setup
 app.use(bodyParser.json());
