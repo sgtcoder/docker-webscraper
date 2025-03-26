@@ -1,5 +1,5 @@
 {
-    "name": "webscraper",
+    "name": "docker-webscraper",
     "version": "1.0.0",
     "description": "",
     "main": "index.js",
@@ -9,14 +9,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/digestoo/web-to-json.git"
+        "url": "git+https://github.com/sgtcoder/docker-webscraper.git"
     },
-    "author": "Mateusz Rzepa",
+    "author": "sgtcoder",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/digestoo/web-to-json/issues"
+        "url": "https://github.com/sgtcoder/docker-webscraper/issues"
     },
-    "homepage": "https://github.com/digestoo/web-to-json#readme",
+    "homepage": "https://github.com/sgtcoder/docker-webscraper#readme",
     "overrides": {
         "rimraf": "^6.0.1",
         "glob": "^11.0.1"
